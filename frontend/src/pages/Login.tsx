@@ -1,14 +1,15 @@
-import Cookies from "js-cookie";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../app/hooks";
+import { setUser } from "../features/authSlice";
 import { useLoginMutation } from "../services/loginApi";
 import { handleError, handleSuccess } from "../utils";
 
 const Login = () => {
   const [loginInfo, setLoginInfo] = useState({ email: "", password: "" });
-  const [login, { isLoading, isError, error, data, isSuccess }] =
-    useLoginMutation();
+  const [login, { isLoading, isSuccess }] = useLoginMutation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -21,13 +22,14 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const { message, user, token } = await login(loginInfo).unwrap();
+      const response = await login(loginInfo).unwrap();
 
       // Success handling
-      handleSuccess(message);
-      Cookies.set("user", JSON.stringify(user));
-      Cookies.set("token", token);
-      navigate("/dashboard");
+      if (isSuccess) {
+        handleSuccess(response.message);
+        dispatch(setUser(response));
+        navigate("/dashboard");
+      }
     } catch (err: any) {
       // Error handling
       handleError(err?.data?.message || "Login failed. Please try again.");
