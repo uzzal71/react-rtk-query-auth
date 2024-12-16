@@ -1,16 +1,15 @@
 import React from "react";
-import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
-import { selectAuth } from "../features/authSlice";
+import { getUserInfo } from "../utils/authUtils";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const auth = useSelector(selectAuth);
+  const userInfo = getUserInfo();
 
-  if (auth.token) {
+  if (!userInfo?.isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
 

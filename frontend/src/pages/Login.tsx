@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../app/hooks";
 import { setUser } from "../features/authSlice";
 import { useLoginMutation } from "../services/loginApi";
 import { handleError, handleSuccess } from "../utils";
+import { getUserInfo } from "../utils/authUtils";
 
 const Login = () => {
   const [loginInfo, setLoginInfo] = useState({ email: "", password: "" });
-  const [login, { isLoading, isSuccess }] = useLoginMutation();
+  const [login, { isLoading }] = useLoginMutation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
@@ -25,16 +26,29 @@ const Login = () => {
       const response = await login(loginInfo).unwrap();
 
       // Success handling
-      if (isSuccess) {
-        handleSuccess(response.message);
-        dispatch(setUser(response));
-        navigate("/dashboard");
+      handleSuccess(response.message);
+      if (response.user && response.token) {
+        dispatch(
+          setUser({
+            isLoggedIn: true,
+            user: response.user,
+            token: response.token,
+          })
+        );
       }
+      navigate("/dashboard");
     } catch (err: any) {
       // Error handling
       handleError(err?.data?.message || "Login failed. Please try again.");
     }
   };
+
+  useEffect(() => {
+    const userInfo = getUserInfo();
+    if (userInfo?.isLoggedIn) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   return (
     <div className="container">

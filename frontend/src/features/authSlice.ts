@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import { RootState } from "../app/store";
 
 export interface AuthState {
+  isLoggedIn: boolean;
   user: {
     id: string;
     firstName: string;
@@ -13,6 +14,7 @@ export interface AuthState {
 }
 
 const initialState: AuthState = {
+  isLoggedIn: false,
   user: null,
   token: null,
 };
@@ -22,13 +24,15 @@ export const authSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<AuthState>) => {
-      console.log(action.payload);
+      Cookies.set("isLoggedIn", "true");
       Cookies.set("user", JSON.stringify(action.payload.user));
       Cookies.set("token", action.payload.token ?? "");
+      state.isLoggedIn = action.payload.isLoggedIn;
       state.user = JSON.parse(JSON.stringify(action.payload.user));
       state.token = action.payload.token;
     },
     logout: (state) => {
+      Cookies.remove("isLoggedIn");
       Cookies.remove("user");
       Cookies.remove("token");
       state.user = null;

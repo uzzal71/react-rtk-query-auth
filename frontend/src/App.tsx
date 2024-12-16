@@ -1,13 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { useAppSelector } from "./app/hooks";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { selectAuth } from "./features/authSlice";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import { getUserInfo } from "./utils/authUtils";
 
 const App = () => {
-  const { token } = useAppSelector(selectAuth);
+  const userInfo = getUserInfo();
 
   return (
     <div className="App">
@@ -15,7 +14,10 @@ const App = () => {
         <Route
           path="/"
           element={
-            <Navigate to={token?.length ? "/dashboard" : "/login"} replace />
+            <Navigate
+              to={userInfo?.isLoggedIn ? "/dashboard" : "/login"}
+              replace
+            />
           }
         />
         <Route path="/login" element={<Login />} />
