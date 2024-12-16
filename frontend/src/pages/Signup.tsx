@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../app/hooks";
+import { setUser } from "../features/authSlice";
+import { useSignupMutation } from "../services/signupApi";
+import { handleError, handleSuccess } from "../utils";
 
 const Signup = () => {
   const [signupInfo, setSignupInfo] = useState({
@@ -8,6 +12,9 @@ const Signup = () => {
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [signup, { isLoading }] = useSignupMutation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -17,10 +24,28 @@ const Signup = () => {
     }));
   };
 
-  const handleSignup = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Add signup logic here (e.g., API call)
-    console.log("Signup data:", signupInfo);
+    e.preventDefault();
+    try {
+      const response = await signup(signupInfo).unwrap();
+
+      // Success handling
+      handleSuccess(response.message);
+      if (response.user && response.token) {
+        dispatch(
+          setUser({
+            isLoggedIn: true,
+            user: response.user,
+            token: response.token,
+          })
+        );
+      }
+      navigate("/dashboard");
+    } catch (err: any) {
+      // Error handling
+      handleError(err?.data?.message || "Login failed. Please try again.");
+    }
   };
 
   return (
@@ -67,7 +92,7 @@ const Signup = () => {
             onChange={handleChange}
           />
         </div>
-        <button type="submit">Signup</button>
+        <button type="submit">{isLoading ? "Singup..." : "Signup"}</button>
         <span>
           Have a already an account? <Link to="/login">Login</Link>
         </span>
